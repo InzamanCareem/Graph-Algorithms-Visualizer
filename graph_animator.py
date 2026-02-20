@@ -1,57 +1,15 @@
 from manim import *
-from graph import Graphs
 import numpy as np
 
 
 class GraphAnimation(Scene):
 
-    def __init__(self, algorithm=None, start_node=None, end_node=None, **kwargs):
+    def __init__(self, graph, algorithm=None, start_node=None, end_node=None, **kwargs):
+        self.graph = graph
         self.algorithm = algorithm
         self.start_node = start_node
         self.end_node = end_node
         super().__init__(**kwargs)
-
-    def init_graph(self):
-        graph = Graphs()
-
-        # graph.add_edge("A", "B", weight=85, directed=True)
-        # graph.add_edge("A", "C", weight=20, directed=True)
-        # graph.add_edge("B", "D", weight=10)
-        # graph.add_edge("B", "E", weight=29, directed=True)
-        # graph.add_edge("C", "F", weight=57, directed=True)
-
-        graph.add_edge("S", "A", directed=True, weight=5)
-        graph.add_edge("S", "B", directed=True, weight=9)
-        graph.add_edge("S", "D", directed=True, weight=6)
-        graph.add_edge("D", "S", directed=True, weight=1)
-        graph.add_edge("A", "G1", directed=True, weight=9)
-        graph.add_edge("A", "B", directed=True, weight=3)
-        graph.add_edge("B", "A", directed=True, weight=2)
-        graph.add_edge("B", "C", directed=True, weight=1)
-        graph.add_edge("C", "S", directed=True, weight=6)
-        graph.add_edge("C", "G2", directed=True, weight=5)
-        graph.add_edge("C", "F", directed=True, weight=7)
-        graph.add_edge("D", "C", directed=True, weight=2)
-        graph.add_edge("D", "E", directed=True, weight=2)
-        graph.add_edge("E", "G3", directed=True, weight=7)
-        graph.add_edge("F", "D", directed=True, weight=2)
-        graph.add_edge("F", "G3", directed=True, weight=8)
-
-        # graph.add_edge("0", "1")
-        # graph.add_edge("0", "3")
-        # graph.add_edge("1", "2")
-        # graph.add_edge("1", "3")
-        # graph.add_edge("1", "5")
-        # graph.add_edge("1", "6")
-        # graph.add_edge("3", "2")
-        # graph.add_edge("3", "4")
-        # graph.add_edge("2", "4")
-        # graph.add_edge("2", "5")
-        # graph.add_edge("4", "6")
-
-        graph.display_graph()
-
-        return graph
 
     def make_position(self, i, n, radius):
         angle = 2 * np.pi * i / n
@@ -81,7 +39,7 @@ class GraphAnimation(Scene):
     def construct(self) -> None:
 
         # CREATING THE GRAPH
-        graph = self.init_graph()
+        graph = self.graph
 
         nodes = {}
 

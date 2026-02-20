@@ -1,23 +1,25 @@
-import argparse
+from graph import Graphs
 from graph_animator import GraphAnimation
 
+graph = Graphs()
 
-def main(alg, start, end):
-    scene = GraphAnimation(algorithm=alg, start_node=start, end_node=end)
-    scene.render(preview=True)
-
+graph.add_edge("S", "A", directed=True, weight=5)
+graph.add_edge("S", "B", directed=True, weight=9)
+graph.add_edge("S", "D", directed=True, weight=6)
+graph.add_edge("D", "S", directed=True, weight=1)
+graph.add_edge("A", "G1", directed=True, weight=9)
+graph.add_edge("A", "B", directed=True, weight=3)
+graph.add_edge("B", "A", directed=True, weight=2)
+graph.add_edge("B", "C", directed=True, weight=1)
+graph.add_edge("C", "S", directed=True, weight=6)
+graph.add_edge("C", "G2", directed=True, weight=5)
+graph.add_edge("C", "F", directed=True, weight=7)
+graph.add_edge("D", "C", directed=True, weight=2)
+graph.add_edge("D", "E", directed=True, weight=2)
+graph.add_edge("E", "G3", directed=True, weight=7)
+graph.add_edge("F", "D", directed=True, weight=2)
+graph.add_edge("F", "G3", directed=True, weight=8)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Compiling Animation")
-
-    parser.add_argument("--alg", type=str, required=True,
-                        choices=["breadth-first-search", "depth-first-search", "uniform-cost-search"],
-                        help="Which graph algorithm to run")
-
-    parser.add_argument("--start", type=str, required=False, help="Which graph node to start with")
-
-    parser.add_argument("--end", type=str, required=False, help="Which graph node to end with")
-
-    args = parser.parse_args()
-
-    main(args.alg, args.start, args.end)
+    scene = GraphAnimation(graph=graph, algorithm="uniform-cost-search", start_node="S", end_node="G3")
+    scene.render(preview=True)
