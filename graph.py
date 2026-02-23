@@ -145,36 +145,29 @@ class Graphs:
             Tuple[
                 Dict[str, Optional[str]], List[str]]:
         stack = Stack()
-        stack.push(start_node)
-        visited_nodes = []
+        stack.push((start_node, 0))
+        visited_nodes = [start_node]
         parents = {start_node: None}
         final_path = []
 
         while not stack.is_empty():
-            depth_list = []
-            current_node = stack.pop()
+            current_node, depth = stack.pop()
 
             if current_node == target_node:
                 break
 
-            node = current_node
-            while node is not None:
-                depth_list.append(node)
-                node = parents[node]
-
-            if len(depth_list) - 1 <= depth_limit:
+            if depth < depth_limit:
                 for node in self.graph.get(current_node):
-                    if node[0] not in visited_nodes and node[0] not in stack.stack:
-                        stack.push(node[0])
+                    if node[0] not in visited_nodes:
+                        stack.push((node[0], depth + 1))
                         parents[node[0]] = current_node
-
-                visited_nodes.append(current_node)
+                        visited_nodes.append(node[0])
 
         print(f"All visited nodes: {visited_nodes}")
 
         print(f"Parents: {parents}")
 
-        if target_node:
+        if target_node in parents:
             node = target_node
             while node is not None:
                 final_path.append(node)
