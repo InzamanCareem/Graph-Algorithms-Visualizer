@@ -1,3 +1,5 @@
+from pyglet.window.key import BREAK
+
 from custom_queue import Queue, PriorityQueue
 from custom_stack import Stack
 
@@ -128,6 +130,49 @@ class Graphs:
 
         print(f"All visited nodes: {visited_nodes}")
         # print(parents)
+
+        if target_node:
+            node = target_node
+            while node is not None:
+                final_path.append(node)
+                node = parents[node]
+
+            print(f"Path: {final_path[::-1]}")
+
+        return parents, final_path[::-1]
+
+    def run_depth_limited_search(self, start_node: str, target_node: Optional[str] = None, depth_limit: int = 5) -> \
+            Tuple[
+                Dict[str, Optional[str]], List[str]]:
+        stack = Stack()
+        stack.push(start_node)
+        visited_nodes = []
+        parents = {start_node: None}
+        final_path = []
+
+        while not stack.is_empty():
+            depth_list = []
+            current_node = stack.pop()
+
+            if current_node == target_node:
+                break
+
+            node = current_node
+            while node is not None:
+                depth_list.append(node)
+                node = parents[node]
+
+            if len(depth_list) - 1 <= depth_limit:
+                for node in self.graph.get(current_node):
+                    if node[0] not in visited_nodes and node[0] not in stack.stack:
+                        stack.push(node[0])
+                        parents[node[0]] = current_node
+
+                visited_nodes.append(current_node)
+
+        print(f"All visited nodes: {visited_nodes}")
+
+        print(f"Parents: {parents}")
 
         if target_node:
             node = target_node

@@ -4,11 +4,12 @@ import numpy as np
 
 class GraphAnimation(Scene):
 
-    def __init__(self, graph, algorithm=None, start_node=None, end_node=None, **kwargs):
+    def __init__(self, graph, algorithm=None, start_node=None, end_node=None, depth_limit=10, **kwargs):
         self.graph = graph
         self.algorithm = algorithm
         self.start_node = start_node
         self.end_node = end_node
+        self.depth_limit = depth_limit
         super().__init__(**kwargs)
 
     def make_position(self, i, n, radius):
@@ -83,6 +84,8 @@ class GraphAnimation(Scene):
             parents, path = graph.run_depth_first_search(self.start_node, self.end_node)
         elif self.algorithm == "uniform-cost-search":
             parents, path = graph.run_uniform_cost_search(self.start_node, self.end_node)
+        elif self.algorithm == "depth-limited-search":
+            parents, path = graph.run_depth_limited_search(self.start_node, self.end_node, depth_limit=self.depth_limit)
 
         # print(parents)
 
