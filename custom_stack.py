@@ -1,18 +1,23 @@
+from typing import TypeVar
+
+T = TypeVar('T')
+
+
 class Stack:
     def __init__(self, maxsize=-1):
         self.stack = []
         self.maxsize = maxsize
 
-    def push(self, item: str) -> None:
+    def push(self, item: T) -> None:
         if not self.is_full():
             self.stack.append(item)
 
-    def pop(self) -> str:
+    def pop(self) -> T:
         if not self.is_empty():
             return self.stack.pop()
         return ""
 
-    def peek(self) -> str:
+    def peek(self) -> T:
         if not self.is_empty():
             return self.stack[len(self.stack) - 1]
         return ""
