@@ -21,5 +21,6 @@ graph.add_edge("F", "D", directed=True, weight=2)
 graph.add_edge("F", "G3", directed=True, weight=8)
 
 if __name__ == "__main__":
-    scene = GraphAnimation(graph=graph, algorithm="depth-limited-search", start_node="S", depth_limit=2)
+    scene = GraphAnimation(graph=graph, algorithm="iterative-deepening-depth-first-search", start_node="S",
+                           end_node="G3")
     scene.render(preview=True)
