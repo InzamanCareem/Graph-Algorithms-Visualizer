@@ -3,7 +3,6 @@ import numpy as np
 
 
 class GraphAnimation(Scene):
-
     def __init__(self, graph, algorithm=None, start_node=None, end_node=None, depth_limit=10, **kwargs):
         self.graph = graph
         self.algorithm = algorithm
@@ -37,44 +36,7 @@ class GraphAnimation(Scene):
 
         return edges
 
-    def construct(self) -> None:
-
-        # CREATING THE GRAPH
-        graph = self.graph
-
-        nodes = {}
-
-        n = len(graph.graph)
-        radius = 3
-        positions = {}
-
-        for i, label in enumerate(graph.graph.keys()):
-            pos = self.make_position(i, n, radius)
-            positions[label] = pos
-
-        for label, pos in positions.items():
-            node = self.make_node(label, pos)
-            nodes[label] = node
-
-        print(nodes)
-
-        edges = self.make_edges(graph.graph, nodes)
-        edges_group = VGroup(*[edge.submobjects[:2] for edge in edges.submobjects])
-
-        nodes_group = VGroup(*nodes.values())
-
-        self.play(Create(nodes_group))
-        self.play(Create(edges_group))
-
-        self.wait(2)
-
-        # RUNNING THE SEARCH
-
-        label = Text(f"Animation of {self.algorithm} from {self.start_node} to {self.end_node}", font_size=30).to_edge(
-            UL)
-
-        self.play(Create(label))
-
+    def select_algorithm(self, graph):
         parents = None
         path = None
 
@@ -85,33 +47,85 @@ class GraphAnimation(Scene):
         elif self.algorithm == "uniform-cost-search":
             parents, path = graph.run_uniform_cost_search(self.start_node, self.end_node)
         elif self.algorithm == "depth-limited-search":
-            parents, path = graph.run_depth_limited_search(self.start_node, self.end_node, depth_limit=self.depth_limit)
+            parents, path = graph.run_depth_limited_search(self.start_node, self.end_node, self.depth_limit)
+        elif self.algorithm == "iterative-deepening-depth-first-search":
+            parents, path = graph.run_iterative_deepening_depth_first_search(self.start_node, self.end_node)
 
-        # print(parents)
+        return parents, path
 
-        for i, (lnode, lparent) in enumerate(parents.items()):
-            index_p = [j for j, gnode in enumerate(nodes_group.submobjects) if gnode[1].text == lparent]
+    def make_graph(self):
+        nodes = {}
 
-            index_e = [j for j, edge in enumerate(edges.submobjects) if
-                       edge.submobjects[2].submobjects[0].submobjects[1].text == lparent and
-                       edge.submobjects[2].submobjects[1].submobjects[1].text == lnode]
+        n = len(self.graph.graph)
+        radius = 3
+        positions = {}
 
-            index_c = [j for j, gnode in enumerate(nodes_group.submobjects) if gnode[1].text == lnode]
+        for i, label in enumerate(self.graph.graph.keys()):
+            pos = self.make_position(i, n, radius)
+            positions[label] = pos
 
-            # Circle the parent
-            if index_p:
-                self.play(Circumscribe(nodes_group[index_p[0]], shape=Circle))
+        for label, pos in positions.items():
+            node = self.make_node(label, pos)
+            nodes[label] = node
 
-            # Arrow source to destination
-            if index_e:
-                progress_arrow = edges[index_e[0]].submobjects[0].copy().set_stroke(opacity=1)
-                self.play(Create(progress_arrow), run_time=2)
+        edges = self.make_edges(self.graph.graph, nodes)
 
-            # Flash the child
-            self.play(Flash(nodes_group[index_c[0]]))
+        nodes_group = VGroup(*nodes.values())
+        edges_group = VGroup(*[edge.submobjects[:2] for edge in edges.submobjects])
+
+        return nodes_group, edges_group, edges
+
+    def construct(self) -> None:
+        nodes_group, edges_group, edges = self.make_graph()
+
+        nodes_group.save_state()
+        edges_group.save_state()
+
+        label = Text(f"Animation of {self.algorithm} from {self.start_node} to {self.end_node}", font_size=30).to_edge(
+            UL)
+
+        self.play(Create(label))
+
+        parents_list, path = self.select_algorithm(self.graph)
+
+        self.play(Create(nodes_group))
+        self.play(Create(edges_group))
+
+        self.wait(1)
+
+        for parents in parents_list:
+
+            temp_progress_arrows = VGroup()
+
+            for i, (lnode, lparent) in enumerate(parents.items()):
+                index_p = [j for j, gnode in enumerate(nodes_group.submobjects) if gnode[1].text == lparent]
+
+                index_e = [j for j, edge in enumerate(edges.submobjects) if
+                           edge.submobjects[2].submobjects[0].submobjects[1].text == lparent and
+                           edge.submobjects[2].submobjects[1].submobjects[1].text == lnode]
+
+                index_c = [j for j, gnode in enumerate(nodes_group.submobjects) if gnode[1].text == lnode]
+
+                # Circle the parent
+                if index_p:
+                    self.play(Circumscribe(nodes_group[index_p[0]], shape=Circle))
+
+                # Arrow source to destination
+                if index_e:
+                    progress_arrow = edges[index_e[0]].submobjects[0].copy().set_stroke(opacity=1)
+                    temp_progress_arrows.add(progress_arrow)
+                    self.play(Create(progress_arrow), run_time=2)
+
+                # Flash the child
+                self.play(Flash(nodes_group[index_c[0]]))
+
+            self.remove(*temp_progress_arrows)
+            self.play(Restore(nodes_group))
+            self.play(Restore(edges_group))
+
+            self.wait(1)
 
         # Make the final path red
-
         for i in range(len(path)):
             index_e = [j for j, edge in enumerate(edges.submobjects) if
                        edge.submobjects[2].submobjects[0].submobjects[1].text == path[i] and

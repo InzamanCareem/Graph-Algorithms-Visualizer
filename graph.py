@@ -31,7 +31,7 @@ class Graphs:
         print(self.graph)
 
     def run_breadth_first_search(self, start_node: str, target_node: Optional[str] = None) -> Tuple[
-        Dict[str, Optional[str]], List[str]]:
+        List[Dict[str, Optional[str]]], List[str]]:
         queue = Queue()
         queue.enqueue(start_node)
         visited_nodes = [start_node]
@@ -63,10 +63,10 @@ class Graphs:
 
             print(f"Path: {final_path[::-1]}")
 
-        return parents, final_path[::-1]
+        return [parents], final_path[::-1]
 
     def run_depth_first_search(self, start_node: str, target_node: Optional[str] = None) -> Tuple[
-        Dict[str, Optional[str]], List[str]]:
+        List[Dict[str, Optional[str]]], List[str]]:
         stack = Stack()
         stack.push(start_node)
         visited_nodes = [start_node]
@@ -98,7 +98,7 @@ class Graphs:
 
             print(f"Path: {final_path[::-1]}")
 
-        return parents, final_path[::-1]
+        return [parents], final_path[::-1]
 
     def run_uniform_cost_search(self, start_node: str, target_node: Optional[str] = None) -> Tuple[
         Dict[str, Optional[str]], List[str]]:
@@ -139,11 +139,11 @@ class Graphs:
 
             print(f"Path: {final_path[::-1]}")
 
-        return parents, final_path[::-1]
+        return [parents], final_path[::-1]
 
     def run_depth_limited_search(self, start_node: str, target_node: Optional[str] = None, depth_limit: int = 5) -> \
             Tuple[
-                Dict[str, Optional[str]], List[str]]:
+                List[Dict[str, Optional[str]]], List[str]]:
         stack = Stack()
         stack.push((start_node, 0))
         visited_nodes = [start_node]
@@ -175,4 +175,47 @@ class Graphs:
 
             print(f"Path: {final_path[::-1]}")
 
-        return parents, final_path[::-1]
+        return [parents], final_path[::-1]
+
+    def run_iterative_deepening_depth_first_search(self, start_node: str, target_node: Optional[str] = None) -> Tuple[
+        List[Dict[str, Optional[str]]], List[str]]:
+        depth_limit = 0
+        current_node = None
+        final_parents = None
+        parents_list = []
+        final_path = []
+
+        while current_node != target_node:
+            queue = Queue()
+            queue.enqueue((start_node, 0))
+            visited_nodes = [start_node]
+            parents = {start_node: None}
+
+            while not queue.is_empty():
+                current_node, depth = queue.dequeue()
+
+                if depth < depth_limit:
+                    for node in self.graph.get(current_node):
+                        if node[0] not in visited_nodes:
+                            queue.enqueue((node[0], depth + 1))
+                            parents[node[0]] = current_node
+                            visited_nodes.append(node[0])
+
+            # print(f"All visited nodes: {visited_nodes}")
+
+            # print(f"Parents: {parents}")
+
+            depth_limit += 1
+
+            final_parents = parents
+            parents_list.append(parents)
+
+        if target_node in final_parents:
+            node = target_node
+            while node is not None:
+                final_path.append(node)
+                node = final_parents[node]
+
+            print(f"Path: {final_path[::-1]}")
+
+        return parents_list, final_path[::-1]
