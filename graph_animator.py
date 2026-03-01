@@ -15,10 +15,11 @@ class GraphAnimation(Scene):
         angle = 2 * np.pi * i / n
         return np.array(radius * np.array([np.cos(angle), np.sin(angle), 0]))
 
-    def make_node(self, label, pos):
-        circle = Circle(radius=0.2, color=WHITE)
-        text = Text(label).scale(0.3).move_to(circle)
-        node = VGroup(circle, text).move_to(pos)
+    def make_node(self, label, pos, cost):
+        circle = Circle(radius=0.2, color=WHITE, stroke_width=1)
+        text = Text(label, font_size=12).move_to(circle)
+        cost_text = MathTex(cost, color=YELLOW, font_size=12).move_to(text.get_corner(DR), aligned_edge=UL)
+        node = VGroup(circle, text, cost_text).move_to(pos)
 
         return node
 
@@ -26,11 +27,11 @@ class GraphAnimation(Scene):
         edges = VGroup()
 
         for s, neighbors in graph.items():  # iterating through neighbours of each node
-            for e in neighbors:  # iterating through each neighbour in that node
+            for e in neighbors[1]:  # iterating through each neighbour in that node
                 a = Arrow(nodes[s].get_center(), nodes[e[0]].get_center(), buff=0.2, path_arc=PI / 8,
-                          stroke_opacity=0.3, tip_length=0.2, stroke_width=3, stroke_color=BLUE)
+                          stroke_opacity=0.3, tip_length=0.1, stroke_width=3, stroke_color=BLUE)
                 h = a.point_from_proportion(0.8)
-                t = MathTex(e[1], color=YELLOW, font_size=25).move_to(h).set_z(1)
+                t = MathTex(e[1], color=YELLOW, font_size=20).move_to(h).set_z(1)
                 grp = VGroup(a, t, VGroup(nodes[s], nodes[e[0]]))
                 edges.add(grp)
 
@@ -50,6 +51,10 @@ class GraphAnimation(Scene):
             parents, path = graph.run_depth_limited_search(self.start_node, self.end_node, self.depth_limit)
         elif self.algorithm == "iterative-deepening-depth-first-search":
             parents, path = graph.run_iterative_deepening_depth_first_search(self.start_node, self.end_node)
+        elif self.algorithm == "best-first-search":
+            parents, path = graph.run_best_first_search(self.start_node, self.end_node)
+        elif self.algorithm == "a-star-search":
+            parents, path = graph.run_a_star_search(self.start_node, self.end_node)
 
         return parents, path
 
@@ -60,12 +65,14 @@ class GraphAnimation(Scene):
         radius = 3
         positions = {}
 
-        for i, label in enumerate(self.graph.graph.keys()):
-            pos = self.make_position(i, n, radius)
-            positions[label] = pos
+        print(self.graph.graph)
 
-        for label, pos in positions.items():
-            node = self.make_node(label, pos)
+        for i, (label, cost) in enumerate(self.graph.graph.items()):
+            pos = self.make_position(i, n, radius)
+            positions[label] = (pos, cost[0])
+
+        for label, (pos, cost) in positions.items():
+            node = self.make_node(label, pos, cost)
             nodes[label] = node
 
         edges = self.make_edges(self.graph.graph, nodes)
@@ -87,6 +94,9 @@ class GraphAnimation(Scene):
         self.play(Create(label))
 
         parents_list, path = self.select_algorithm(self.graph)
+
+        print(parents_list)
+        print(path)
 
         self.play(Create(nodes_group))
         self.play(Create(edges_group))

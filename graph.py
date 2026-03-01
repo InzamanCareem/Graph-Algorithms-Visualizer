@@ -1,31 +1,37 @@
-from pyglet.window.key import BREAK
-
 from custom_queue import Queue, PriorityQueue
 from custom_stack import Stack
 
 from typing import List, Tuple, Dict, Optional
+from dataclasses import dataclass
+
+
+@dataclass
+class Node:
+    name: str
+    cost: float
 
 
 class Graphs:
-    def __init__(self):
-        self.graph: Dict[str, List[Tuple[str, int]]] = {}
+    def __init__(self, hf: Optional[str] = None):
+        self.graph: Dict[str, Tuple[float, List[Tuple[str, int, float]]]] = {}
+        self.h_func = hf
 
     def _check_exists(self, node: str) -> bool:
         return node in self.graph.keys()
 
-    def add_node(self, node: str) -> None:
+    def add_node(self, node: str, hc: float = 0, h: Tuple[float, float] = (0, 0)) -> None:
         if not self._check_exists(node):
-            self.graph[node]: List[Tuple[str, int]] = []
+            self.graph[node]: Tuple[float, List[Tuple[str, int, float]]] = (hc, [])
 
     def add_edge(self, node: str, other: str, weight: int = 1, directed: bool = False) -> None:
 
         # Add nodes if not added using the add_node method
-        self.add_node(node)
-        self.add_node(other)
+        # self.add_node(node)
+        # self.add_node(other)
 
-        self.graph.get(node).append((other, weight))
+        self.graph.get(node)[1].append((other, weight, self.graph.get(other)[0]))
         if not directed:
-            self.graph.get(other).append((node, weight))
+            self.graph.get(other)[1].append((node, weight, self.graph.get(node)[0]))
 
     def display_graph(self) -> None:
         print(self.graph)
@@ -45,7 +51,7 @@ class Graphs:
             if current_node == target_node:
                 break
 
-            for node in self.graph.get(current_node):
+            for node in self.graph.get(current_node)[1]:
                 if node[0] not in visited_nodes:
                     queue.enqueue(node[0])
                     parents[node[0]] = current_node
@@ -80,7 +86,7 @@ class Graphs:
             if current_node == target_node:
                 break
 
-            for node in self.graph.get(current_node):
+            for node in self.graph.get(current_node)[1]:
                 if node[0] not in visited_nodes:
                     stack.push(node[0])
                     parents[node[0]] = current_node
@@ -101,7 +107,7 @@ class Graphs:
         return [parents], final_path[::-1]
 
     def run_uniform_cost_search(self, start_node: str, target_node: Optional[str] = None) -> Tuple[
-        Dict[str, Optional[str]], List[str]]:
+        List[Dict[str, Optional[str]]], List[str]]:
         pqueue = PriorityQueue()
         pqueue.enqueue((start_node, 0))
         visited_nodes = [start_node]
@@ -112,11 +118,11 @@ class Graphs:
             # print(f"Priority Queue: {pqueue.show()}")
             current_node = pqueue.dequeue()
 
-            if current_node == target_node:
+            if current_node[0] == target_node:
                 break
 
             # Get children
-            for node in self.graph.get(current_node[0]):
+            for node in self.graph.get(current_node[0])[1]:
                 if node[0] not in visited_nodes:
                     pqueue.enqueue((node[0], node[1] + current_node[1]))
                     visited_nodes.append(node[0])
@@ -157,7 +163,7 @@ class Graphs:
                 break
 
             if depth < depth_limit:
-                for node in self.graph.get(current_node):
+                for node in self.graph.get(current_node)[1]:
                     if node[0] not in visited_nodes:
                         stack.push((node[0], depth + 1))
                         parents[node[0]] = current_node
@@ -195,7 +201,7 @@ class Graphs:
                 current_node, depth = queue.dequeue()
 
                 if depth < depth_limit:
-                    for node in self.graph.get(current_node):
+                    for node in self.graph.get(current_node)[1]:
                         if node[0] not in visited_nodes:
                             queue.enqueue((node[0], depth + 1))
                             parents[node[0]] = current_node
@@ -219,3 +225,73 @@ class Graphs:
             print(f"Path: {final_path[::-1]}")
 
         return parents_list, final_path[::-1]
+
+    def run_best_first_search(self, start_node: str, target_node: Optional[str] = None) -> Tuple[
+        List[Dict[str, Optional[str]]], List[str]]:
+        queue = PriorityQueue()
+        queue.enqueue((start_node, 0))
+        visited_nodes = [start_node]
+        parents = {start_node: None}
+        final_path = []
+
+        while not queue.is_empty():
+            # print(f"Queue: {queue.show()}")
+            current_node = queue.dequeue()
+
+            if current_node == target_node or current_node is None:
+                break
+
+            for node in self.graph.get(current_node[0])[1]:
+                if node[0] not in visited_nodes:
+                    queue.enqueue((node[0], node[2]))
+                    parents[node[0]] = current_node[0]
+                    visited_nodes.append(node[0])
+
+        print(f"All visited nodes: {visited_nodes}")
+
+        # print(f"Parents: {parents}")
+
+        if target_node in parents:
+            node = target_node
+            while node is not None:
+                final_path.append(node)
+                node = parents[node]
+
+            print(f"Path: {final_path[::-1]}")
+
+        return [parents], final_path[::-1]
+
+    def run_a_star_search(self, start_node: str, target_node: Optional[str] = None) -> Tuple[
+        List[Dict[str, Optional[str]]], List[str]]:
+        queue = PriorityQueue()
+        queue.enqueue((start_node, 0))
+        visited_nodes = [start_node]
+        parents = {start_node: None}
+        final_path = []
+
+        while not queue.is_empty():
+            # print(f"Queue: {queue.show()}")
+            current_node = queue.dequeue()
+
+            if current_node[0] == target_node or current_node[0] is None:
+                break
+
+            for node in self.graph.get(current_node[0])[1]:
+                if node[0] not in visited_nodes:
+                    queue.enqueue((node[0], node[1] + current_node[1]))
+                    parents[node[0]] = current_node[0]
+                    visited_nodes.append(node[0])
+
+        print(f"All visited nodes: {visited_nodes}")
+
+        # print(f"Parents: {parents}")
+
+        if target_node in parents:
+            node = target_node
+            while node is not None:
+                final_path.append(node)
+                node = parents[node]
+
+            print(f"Path: {final_path[::-1]}")
+
+        return [parents], final_path[::-1]
